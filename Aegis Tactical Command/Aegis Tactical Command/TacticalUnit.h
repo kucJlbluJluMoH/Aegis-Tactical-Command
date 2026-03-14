@@ -1,9 +1,15 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 class UpgradeModule;
+class TacticalUnit;
+
+struct BattleContext {
+    vector<TacticalUnit*>* fleet = nullptr;
+};
 
 class TacticalUnit {
 protected:
@@ -17,7 +23,7 @@ public:
 
     virtual ~TacticalUnit();
 
-    virtual void performAction(double accuracyMult) = 0;
+    virtual void performAction(BattleContext& ctx) = 0;
     virtual void printStats(ostream& out) const = 0;
 
     friend ostream& operator<<(ostream& out, const TacticalUnit& unit) {
@@ -31,7 +37,7 @@ public:
     virtual string serialize() const = 0;
 
     int getId() const;
-    string  getName() const;
+    string getName() const;
     int getBattery() const;
     int getMaxBattery() const;
 

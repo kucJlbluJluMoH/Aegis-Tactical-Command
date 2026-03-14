@@ -9,7 +9,7 @@ private:
 public:
     ChargerDrone(int id, int battery = 100, int powerBank = 100);
 
-    void performAction(double accuracyMult) override;
+    void performAction(BattleContext& ctx) override;
     void printStats(ostream& out) const override;
     TacticalUnit& operator+(const UpgradeModule& mod) override;
 

@@ -11,7 +11,7 @@ public:
     ScoutDrone(int id, int battery = 100, int affectedUnits = 3,
         double accuracyMult = 1.1);
 
-    void performAction(double accuracyMult) override;
+    void performAction(BattleContext& ctx) override;
     void printStats(ostream& out) const override;
     TacticalUnit& operator+(const UpgradeModule& mod) override;
 

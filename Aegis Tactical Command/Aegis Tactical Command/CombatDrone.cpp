@@ -5,32 +5,34 @@ using namespace std;
 
 CombatDrone::CombatDrone(int id, int battery, int damage, int accuracy)
     : TacticalUnit(id, "Ares", battery),
-    damage(damage), accuracy(accuracy) {
+      damage(damage), accuracy(accuracy), pendingAccMult(1.0), lastDamage(0) {
 }
 
-void CombatDrone::performAction(double accuracyMult) {
-    int effectiveAcc = static_cast<int>(accuracy * accuracyMult);
-    bool hit = (rand() % 100) < effectiveAcc;
+void CombatDrone::addAccuracyBonus(double bonus) {
+    pendingAccMult += bonus;
+}
+
+void CombatDrone::resetAccuracyBonus() {
+    pendingAccMult = 1.0;
+}
+
+void CombatDrone::performAction(BattleContext&) {
+    int effectiveAcc = static_cast<int>(accuracy * pendingAccMult);
+    bool hit  = (rand() % 100) < effectiveAcc;
     bool crit = hit && (rand() % 100) < 30;
 
     if (hit) {
-        int dmg = crit ? static_cast<int>(damage * 1.5) : damage;
+        lastDamage = crit ? static_cast<int>(damage * 1.5) : damage;
         cout << "[ACTION] " << name << " (ID: " << id << ") fires! Damage: "
-            << dmg << (crit ? " (Crit!)" : "") << ".\n";
+             << lastDamage << (crit ? " (Crit!)" : "") << ".\n";
+    } else {
+        lastDamage = 0;
+        cout << "[ACTION] " << name << " (ID: " << id << ") fires but misses!\n";
     }
-    else {
-        cout << "[ACTION] " << name << " (ID: " << id
-            << ") fires but misses!\n";
-    }
+    setBattery(battery - 5);
 }
 
-int CombatDrone::fireAndGetDamage(double accuracyMult) {
-    int effectiveAcc = static_cast<int>(accuracy * accuracyMult);
-    bool hit = (rand() % 100) < effectiveAcc;
-    bool crit = hit && (rand() % 100) < 30;
-    if (hit) return crit ? static_cast<int>(damage * 1.5) : damage;
-    return 0;
-}
+int CombatDrone::getLastDamage() const { return lastDamage; }
 
 void CombatDrone::printStats(ostream& out) const {
     out << "[ID: " << id << "] CombatDrone \"" << name
@@ -44,8 +46,7 @@ TacticalUnit& CombatDrone::operator+(const UpgradeModule& mod) {
         damage += 10;
         break;
     case UpgradeType::ACCURACY:
-        accuracy += 10;
-        accuracy = min(accuracy, 100);
+        accuracy = min(accuracy + 10, 100);
         break;
     case UpgradeType::BATTERY:
         maxBattery += 20;
@@ -57,12 +58,10 @@ TacticalUnit& CombatDrone::operator+(const UpgradeModule& mod) {
     return *this;
 }
 
-string CombatDrone::getType() const { return "CombatDrone"; }
-
+string CombatDrone::getType()  const { return "CombatDrone"; }
 string CombatDrone::serialize() const {
     return "CombatDrone|" + to_string(id) + "|" + to_string(battery)
-        + "|" + to_string(damage) + "|" + to_string(accuracy);
+         + "|" + to_string(damage) + "|" + to_string(accuracy);
 }
-
 int CombatDrone::getDamage()   const { return damage; }
 int CombatDrone::getAccuracy() const { return accuracy; }

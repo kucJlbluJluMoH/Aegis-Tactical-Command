@@ -1,9 +1,10 @@
 #include "FleetManager.h"
 #include <algorithm>
 #include <iostream>
+#include <climits>
 using namespace std;
 
-FleetManager::FleetManager() : balance(1000), nextId(100), saveFileName("") 
+FleetManager::FleetManager() : nextId(100), balance(1000), saveFileName("") 
 {
     srand(static_cast<unsigned>(time(nullptr)));
 }
@@ -79,6 +80,143 @@ void FleetManager::addUnit()
 
 void FleetManager::deployMission()
 {
+    clearScreen();
+
+    if (fleet.empty()) {
+        cout << "Your fleet is empty! Add some drones before deploying.\n";
+        pause();
+        return;
+    }
+
+    cout << "Choose a mission target:\n";
+    cout << "1. Abandoned Factory\n";
+    cout << "2. Supply Base\n";
+    cout << "3. Cancel\n<< ";
+    string line;
+    getline(cin, line);
+    int missionChoice = 0;
+    try { missionChoice = stoi(line); } catch (...) {}
+    if (missionChoice == 3 || missionChoice == 0) return;
+
+    string missionName = (missionChoice == 1) ? "Abandoned Factory" : "Supply Base";
+
+    clearScreen();
+    cout << "========================================\n";
+    cout << "  MISSION: " << missionName << "\n";
+    cout << "  Boss: GOLIATH | HP: 1000 | Turns: 10\n";
+    cout << "========================================\n";
+    cout << "Press ENTER to start...\n";
+    cin.get();
+
+    int bossHp = 1000;
+    const int MAX_TURNS = 10;
+
+    for (int turn = 1; turn <= MAX_TURNS && bossHp > 0; ++turn) {
+        clearScreen();
+        cout << "========================================\n";
+        cout << "  TURN " << turn << " / " << MAX_TURNS << "\n";
+        cout << "  Boss HP: " << bossHp << "\n";
+        cout << "========================================\n\n";
+
+        for (TacticalUnit* u : fleet) {
+            CombatDrone* cd = dynamic_cast<CombatDrone*>(u);
+            if (cd) cd->resetAccuracyBonus();
+        }
+
+        cout << "--- [SCOUT PHASE] ---\n";
+        {
+            BattleContext ctx;
+            ctx.fleet = &fleet;
+            for (TacticalUnit* u : fleet) {
+                if (u->getBattery() > 0 && u->getType() == "ScoutDrone")
+                    u->performAction(ctx);
+            }
+        }
+        cout << "\n";
+
+        cout << "--- [COMBAT PHASE] ---\n";
+        for (TacticalUnit* u : fleet) {
+            if (u->getBattery() <= 0 || u->getType() != "CombatDrone") continue;
+
+            if (u->getBattery() < 10 && (rand() % 100) < 30) {
+                try {
+                    throw BatteryException(
+                        u->getName() + " [ID:" + to_string(u->getId()) + "]",
+                        u->getBattery());
+                } catch (const BatteryException& e) {
+                    cout << e.what() << " Skipping turn.\n";
+                    continue;
+                }
+            }
+
+            BattleContext ctx;
+            u->performAction(ctx);
+
+            CombatDrone* cd = static_cast<CombatDrone*>(u);
+            bossHp = max(0, bossHp - cd->getLastDamage());
+
+            if (bossHp == 0) break;
+        }
+        cout << "\n";
+
+        if (bossHp == 0) break;
+
+        cout << "--- [CHARGER PHASE] ---\n";
+        {
+            BattleContext ctx;
+            ctx.fleet = &fleet;
+            for (TacticalUnit* u : fleet) {
+                if (u->getBattery() > 0 && u->getType() == "ChargerDrone")
+                    u->performAction(ctx);
+            }
+        }
+        cout << "\n";
+        
+        cout << "--- [ENEMY ATTACK: GOLIATH] ---\n";
+        vector<TacticalUnit*> byBattery = fleet;
+        sort(byBattery.begin(), byBattery.end(),
+             [](TacticalUnit* a, TacticalUnit* b) {
+                 return a->getBattery() > b->getBattery();
+             });
+
+        int targets = min(2, (int)byBattery.size());
+        for (int i = 0; i < targets; ++i) {
+            byBattery[i]->setBattery(byBattery[i]->getBattery() - 20);
+            cout << "[ENEMY] Goliath strikes " << byBattery[i]->getName()
+                 << " (ID: " << byBattery[i]->getId()
+                 << ")! Battery: " << byBattery[i]->getBattery() << "%\n";
+        }
+        cout << "\n";
+
+        int alive = 0, totalBat = 0;
+        for (TacticalUnit* u : fleet) {
+            if (u->getBattery() > 0) { ++alive; totalBat += u->getBattery(); }
+        }
+        int avgBat = alive > 0 ? totalBat / alive : 0;
+
+        cout << "--- [TURN " << turn << " REPORT] ---\n";
+        cout << "  Boss HP:       " << bossHp << "\n";
+        cout << "  Active drones: " << alive << " / " << fleet.size() << "\n";
+        cout << "  Avg battery:   " << avgBat << "%\n";
+        cout << "\nPress ENTER for next turn...\n";
+        cin.get();
+    }
+
+    clearScreen();
+    if (bossHp <= 0) {
+        cout << "========================================\n";
+        cout << "  VICTORY! Goliath has been destroyed!\n";
+        cout << "  Reward: +50 coins\n";
+        cout << "========================================\n";
+        balance += 50;
+    } else {
+        cout << "========================================\n";
+        cout << "  DEFEAT! Goliath survived with " << bossHp << " HP.\n";
+        cout << "  Consolation reward: +10 coins\n";
+        cout << "========================================\n";
+        balance += 10;
+    }
+    pause();
 }
 
 void FleetManager::upgradeCenter() 

@@ -6,19 +6,24 @@ class CombatDrone : public TacticalUnit {
 private:
     int damage;
     int accuracy;
-public:
-    CombatDrone(int id, int battery = 100, int damage = 30,
-        int accuracy = 70);
+    double pendingAccMult;
+    int lastDamage;
 
-    void performAction(double accuracyMult) override;
+public:
+    CombatDrone(int id, int battery = 100, int damage = 30, int accuracy = 70);
+
+    void performAction(BattleContext& ctx) override;
     void printStats(ostream& out) const override;
     TacticalUnit& operator+(const UpgradeModule& mod) override;
 
-    int fireAndGetDamage(double accuracyMult);
+    void addAccuracyBonus(double bonus);
+    void resetAccuracyBonus();
+
+    int getLastDamage() const;
 
     string getType() const override;
     string serialize() const override;
-    
+
     int getDamage() const;
     int getAccuracy() const;
 };
