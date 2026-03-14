@@ -17,7 +17,7 @@ public:
 
     virtual ~TacticalUnit();
 
-    virtual void performAction(bool scoutActive, double accuracyMult) = 0;
+    virtual void performAction(double accuracyMult) = 0;
     virtual void printStats(ostream& out) const = 0;
 
     friend ostream& operator<<(ostream& out, const TacticalUnit& unit) {
