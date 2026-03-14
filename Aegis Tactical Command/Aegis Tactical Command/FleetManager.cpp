@@ -4,12 +4,12 @@
 #include <climits>
 using namespace std;
 
-FleetManager::FleetManager() : nextId(100), balance(1000), saveFileName("") 
+FleetManager::FleetManager() : nextId(100), balance(1000), saveFileName("")
 {
     srand(static_cast<unsigned>(time(nullptr)));
 }
 
-FleetManager::~FleetManager() 
+FleetManager::~FleetManager()
 {
     for (TacticalUnit* unit : fleet) {
         delete unit;
@@ -95,7 +95,8 @@ void FleetManager::deployMission()
     string line;
     getline(cin, line);
     int missionChoice = 0;
-    try { missionChoice = stoi(line); } catch (...) {}
+    try { missionChoice = stoi(line); }
+    catch (...) {}
     if (missionChoice == 3 || missionChoice == 0) return;
 
     string missionName = (missionChoice == 1) ? "Abandoned Factory" : "Supply Base";
@@ -112,6 +113,20 @@ void FleetManager::deployMission()
     const int MAX_TURNS = 10;
 
     for (int turn = 1; turn <= MAX_TURNS && bossHp > 0; ++turn) {
+        int aliveCheck = 0;
+        for (TacticalUnit* u : fleet)
+            if (u->getBattery() > 0) ++aliveCheck;
+        if (aliveCheck == 0) {
+            clearScreen();
+            cout << "========================================\n";
+            cout << "  DEFEAT! All drones are out of power!\n";
+            cout << "  Consolation reward: +10 coins\n";
+            cout << "========================================\n";
+            balance += 10;
+            pause();
+            return;
+        }
+
         clearScreen();
         cout << "========================================\n";
         cout << "  TURN " << turn << " / " << MAX_TURNS << "\n";
@@ -143,7 +158,8 @@ void FleetManager::deployMission()
                     throw BatteryException(
                         u->getName() + " [ID:" + to_string(u->getId()) + "]",
                         u->getBattery());
-                } catch (const BatteryException& e) {
+                }
+                catch (const BatteryException& e) {
                     cout << e.what() << " Skipping turn.\n";
                     continue;
                 }
@@ -171,20 +187,20 @@ void FleetManager::deployMission()
             }
         }
         cout << "\n";
-        
+
         cout << "--- [ENEMY ATTACK: GOLIATH] ---\n";
         vector<TacticalUnit*> byBattery = fleet;
         sort(byBattery.begin(), byBattery.end(),
-             [](TacticalUnit* a, TacticalUnit* b) {
-                 return a->getBattery() > b->getBattery();
-             });
+            [](TacticalUnit* a, TacticalUnit* b) {
+                return a->getBattery() > b->getBattery();
+            });
 
         int targets = min(2, (int)byBattery.size());
         for (int i = 0; i < targets; ++i) {
             byBattery[i]->setBattery(byBattery[i]->getBattery() - 20);
             cout << "[ENEMY] Goliath strikes " << byBattery[i]->getName()
-                 << " (ID: " << byBattery[i]->getId()
-                 << ")! Battery: " << byBattery[i]->getBattery() << "%\n";
+                << " (ID: " << byBattery[i]->getId()
+                << ")! Battery: " << byBattery[i]->getBattery() << "%\n";
         }
         cout << "\n";
 
@@ -198,6 +214,12 @@ void FleetManager::deployMission()
         cout << "  Boss HP:       " << bossHp << "\n";
         cout << "  Active drones: " << alive << " / " << fleet.size() << "\n";
         cout << "  Avg battery:   " << avgBat << "%\n";
+        cout << "\n  [FLEET STATUS]\n";
+        for (TacticalUnit* u : fleet) {
+            cout << "  " << *u;
+            if (u->getBattery() <= 0) cout << " [OFFLINE]";
+            cout << "\n";
+        }
         cout << "\nPress ENTER for next turn...\n";
         cin.get();
     }
@@ -209,7 +231,8 @@ void FleetManager::deployMission()
         cout << "  Reward: +50 coins\n";
         cout << "========================================\n";
         balance += 50;
-    } else {
+    }
+    else {
         cout << "========================================\n";
         cout << "  DEFEAT! Goliath survived with " << bossHp << " HP.\n";
         cout << "  Consolation reward: +10 coins\n";
@@ -219,7 +242,7 @@ void FleetManager::deployMission()
     pause();
 }
 
-void FleetManager::upgradeCenter() 
+void FleetManager::upgradeCenter()
 {
     clearScreen();
     cout << "Enter the ID of a drone you'd like to upgrade:\n";
@@ -325,19 +348,19 @@ void FleetManager::pause()
     cin.get();
 }
 
-void FleetManager::clearScreen() 
+void FleetManager::clearScreen()
 {
-    #ifdef _WIN32
-        system("cls");
-    #else
-        system("clear");
-    #endif
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
 }
 
-void FleetManager::run() 
+void FleetManager::run()
 {
     bool running = true;
-    while (running) 
+    while (running)
     {
         clearScreen();
 

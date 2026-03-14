@@ -5,7 +5,7 @@ using namespace std;
 
 CombatDrone::CombatDrone(int id, int battery, int damage, int accuracy)
     : TacticalUnit(id, "Ares", battery),
-      damage(damage), accuracy(accuracy), pendingAccMult(1.0), lastDamage(0) {
+    damage(damage), accuracy(accuracy), pendingAccMult(1.0), lastDamage(0) {
 }
 
 void CombatDrone::addAccuracyBonus(double bonus) {
@@ -17,15 +17,21 @@ void CombatDrone::resetAccuracyBonus() {
 }
 
 void CombatDrone::performAction(BattleContext&) {
+    cout << "  >> CombatDrone [ID: " << id << "] \"" << name
+        << "\" | Battery: " << battery << "% | Damage: " << damage
+        << " | Accuracy: " << accuracy
+        << " | Acc.Mult: x" << static_cast<int>(pendingAccMult * 100) / 100.0 << "\n";
+
     int effectiveAcc = static_cast<int>(accuracy * pendingAccMult);
-    bool hit  = (rand() % 100) < effectiveAcc;
+    bool hit = (rand() % 100) < effectiveAcc;
     bool crit = hit && (rand() % 100) < 30;
 
     if (hit) {
         lastDamage = crit ? static_cast<int>(damage * 1.5) : damage;
         cout << "[ACTION] " << name << " (ID: " << id << ") fires! Damage: "
-             << lastDamage << (crit ? " (Crit!)" : "") << ".\n";
-    } else {
+            << lastDamage << (crit ? " (Crit!)" : "") << ".\n";
+    }
+    else {
         lastDamage = 0;
         cout << "[ACTION] " << name << " (ID: " << id << ") fires but misses!\n";
     }
@@ -61,7 +67,7 @@ TacticalUnit& CombatDrone::operator+(const UpgradeModule& mod) {
 string CombatDrone::getType()  const { return "CombatDrone"; }
 string CombatDrone::serialize() const {
     return "CombatDrone|" + to_string(id) + "|" + to_string(battery)
-         + "|" + to_string(damage) + "|" + to_string(accuracy);
+        + "|" + to_string(damage) + "|" + to_string(accuracy);
 }
 int CombatDrone::getDamage()   const { return damage; }
 int CombatDrone::getAccuracy() const { return accuracy; }

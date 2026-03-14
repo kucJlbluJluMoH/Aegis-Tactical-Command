@@ -9,6 +9,9 @@ ChargerDrone::ChargerDrone(int id, int battery, int powerBank)
 }
 
 void ChargerDrone::performAction(BattleContext& ctx) {
+    cout << "  >> ChargerDrone [ID: " << id << "] \"" << name
+        << "\" | Battery: " << battery << "% | Power bank: " << powerBank << "%\n";
+
     cout << "[SUPPORT] " << name << " (ID: " << id << ") charges an ally.\n";
 
     if (!ctx.fleet) { setBattery(battery - 5); return; }
@@ -29,8 +32,8 @@ void ChargerDrone::performAction(BattleContext& ctx) {
         if (transfer > 0) {
             target->setBattery(target->getBattery() + transfer);
             cout << "  -> Transfers " << transfer << " energy to "
-                 << target->getName() << " (ID: " << target->getId()
-                 << "). Battery: " << target->getBattery() << "%\n";
+                << target->getName() << " (ID: " << target->getId()
+                << "). Battery: " << target->getBattery() << "%\n";
         }
     }
 
@@ -61,6 +64,6 @@ TacticalUnit& ChargerDrone::operator+(const UpgradeModule& mod) {
 string ChargerDrone::getType()   const { return "ChargerDrone"; }
 string ChargerDrone::serialize() const {
     return "ChargerDrone|" + to_string(id) + "|"
-         + to_string(battery) + "|" + to_string(powerBank);
+        + to_string(battery) + "|" + to_string(powerBank);
 }
 int ChargerDrone::getPowerBank() const { return powerBank; }

@@ -6,17 +6,20 @@ using namespace std;
 
 ScoutDrone::ScoutDrone(int id, int battery, int affectedUnits, double accuracyMult)
     : TacticalUnit(id, "Seeker", battery),
-      affectedUnits(affectedUnits), accuracyMultiplier(accuracyMult) {
+    affectedUnits(affectedUnits), accuracyMultiplier(accuracyMult) {
 }
 
 void ScoutDrone::performAction(BattleContext& ctx) {
+    cout << "  >> ScoutDrone [ID: " << id << "] \"" << name
+        << "\" | Battery: " << battery << "% | Affected units: " << affectedUnits
+        << " | Acc.Mult: +" << static_cast<int>((accuracyMultiplier - 1.0) * 100) << "%\n";
+
     cout << "[SUPPORT] " << name << " (ID: " << id
-         << ") scans the enemy! Accuracy bonus +"
-         << static_cast<int>((accuracyMultiplier - 1.0) * 100) << "%.\n";
+        << ") scans the enemy! Accuracy bonus +"
+        << static_cast<int>((accuracyMultiplier - 1.0) * 100) << "%.\n";
 
     if (!ctx.fleet) { setBattery(battery - 5); return; }
 
-    // Собираем живых боевых дронов
     vector<CombatDrone*> combatants;
     for (TacticalUnit* u : *ctx.fleet) {
         if (u->getBattery() > 0) {
@@ -25,7 +28,6 @@ void ScoutDrone::performAction(BattleContext& ctx) {
         }
     }
 
-    // Перемешиваем и берём до affectedUnits случайных
     for (int i = (int)combatants.size() - 1; i > 0; --i)
         swap(combatants[i], combatants[rand() % (i + 1)]);
 
@@ -33,7 +35,7 @@ void ScoutDrone::performAction(BattleContext& ctx) {
     for (int i = 0; i < count; ++i) {
         combatants[i]->addAccuracyBonus(accuracyMultiplier - 1.0);
         cout << "  -> Buffs CombatDrone [ID: " << combatants[i]->getId()
-             << "] (+" << static_cast<int>((accuracyMultiplier - 1.0) * 100) << "% acc)\n";
+            << "] (+" << static_cast<int>((accuracyMultiplier - 1.0) * 100) << "% acc)\n";
     }
 
     setBattery(battery - 5);
@@ -67,7 +69,7 @@ TacticalUnit& ScoutDrone::operator+(const UpgradeModule& mod) {
 string ScoutDrone::getType()   const { return "ScoutDrone"; }
 string ScoutDrone::serialize() const {
     return "ScoutDrone|" + to_string(id) + "|" + to_string(battery)
-         + "|" + to_string(affectedUnits) + "|" + to_string(accuracyMultiplier);
+        + "|" + to_string(affectedUnits) + "|" + to_string(accuracyMultiplier);
 }
 int    ScoutDrone::getAffectedUnits()     const { return affectedUnits; }
 double ScoutDrone::getAccuracyMultiplier() const { return accuracyMultiplier; }
