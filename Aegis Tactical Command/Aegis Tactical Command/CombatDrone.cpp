@@ -25,15 +25,15 @@ void CombatDrone::performAction(BattleContext&) {
     int effectiveAcc = static_cast<int>(accuracy * pendingAccMult);
     bool hit = (rand() % 100) < effectiveAcc;
     bool crit = hit && (rand() % 100) < 30;
-
+    cout << "[ACTION] " << name << " (ID: " << id << ") fires!";
     if (hit) {
         lastDamage = crit ? static_cast<int>(damage * 1.5) : damage;
-        cout << "[ACTION] " << name << " (ID: " << id << ") fires! Damage: "
-            << lastDamage << (crit ? " (Crit!)" : "") << ".\n";
+        cout << " Target hit! Dealing " << lastDamage << " damage"
+            << (crit ? " (CRITICAL!)" : "") << ".\n";
     }
     else {
         lastDamage = 0;
-        cout << "[ACTION] " << name << " (ID: " << id << ") fires but misses!\n";
+        cout << " Target missed.\n";
     }
     setBattery(battery - 5);
 }
