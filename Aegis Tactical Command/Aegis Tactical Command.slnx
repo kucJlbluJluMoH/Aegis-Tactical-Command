@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="Aegis Tactical Command/Aegis Tactical Command.vcxproj" />
+  <Project Path="Aegis Tactical Command/Aegis Tactical Command.vcxproj" Id="26f6339a-7d42-44ff-9beb-86e55c15cbda" />
 </Solution>
