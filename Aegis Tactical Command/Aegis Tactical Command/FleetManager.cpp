@@ -82,6 +82,7 @@ void FleetManager::addUnit()
     catch (const InsufficientFundsException& e) {
         cout << e.what() << "\n";
     }
+    pause();
 }
 
 void FleetManager::deployMission()
@@ -90,6 +91,14 @@ void FleetManager::deployMission()
 void FleetManager::upgradeCenter() {}
 void FleetManager::saveFleet() {}
 void FleetManager::loadFleet() {}
+
+void FleetManager::pause()
+{
+    cout << "\nPress ENTER to continue...";
+    cin.ignore(1000, '\n');
+    cin.get();
+}
+
 void FleetManager::clearScreen() 
 {
     #ifdef _WIN32

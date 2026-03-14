@@ -18,6 +18,7 @@ private:
     int balance;
     string saveFileName;
 
+    void pause();
     void clearScreen();
     void showFleet();
     void addUnit();
