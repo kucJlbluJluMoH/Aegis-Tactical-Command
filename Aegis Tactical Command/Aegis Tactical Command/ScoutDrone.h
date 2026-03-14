@@ -19,5 +19,7 @@ public:
     string serialize() const override;
 
     int getAffectedUnits() const;
+    void setAffectedUnits(int val);
+    void setAccuracyMultiplier(int val);
     double getAccuracyMultiplier() const;
 };

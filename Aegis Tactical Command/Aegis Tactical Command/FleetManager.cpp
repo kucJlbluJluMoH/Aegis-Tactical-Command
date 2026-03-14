@@ -2,9 +2,12 @@
 #include <algorithm>
 #include <iostream>
 #include <climits>
+#include <fstream>
+#include <filesystem>
 using namespace std;
+namespace fs = filesystem;
 
-FleetManager::FleetManager() : nextId(100), balance(1000), saveFileName("")
+FleetManager::FleetManager() : nextId(100), balance(500), saveFileName("")
 {
     srand(static_cast<unsigned>(time(nullptr)));
 }
@@ -123,6 +126,8 @@ void FleetManager::deployMission()
             cout << "  Consolation reward: +10 coins\n";
             cout << "========================================\n";
             balance += 10;
+            for (TacticalUnit* u : fleet)
+                u->setBattery(u->getMaxBattery());
             pause();
             return;
         }
@@ -239,6 +244,10 @@ void FleetManager::deployMission()
         cout << "========================================\n";
         balance += 10;
     }
+
+    for (TacticalUnit* u : fleet)
+        u->setBattery(u->getMaxBattery());
+
     pause();
 }
 
@@ -246,6 +255,17 @@ void FleetManager::upgradeCenter()
 {
     clearScreen();
     cout << "Enter the ID of a drone you'd like to upgrade:\n";
+    if (fleet.empty()) {
+        cout << "Your fleet is empty!\n";
+        pause();
+        return;
+    }
+    else {
+        cout << "This is your fleet:\n";
+        for_each(fleet.begin(), fleet.end(), [](TacticalUnit* unit) {
+            cout << *unit << "\n";
+            });
+    }
     cout << "1. Cancel\n<< ";
 
     string line;
@@ -338,13 +358,187 @@ void FleetManager::upgradeCenter()
     pause();
 }
 
-void FleetManager::saveFleet() {}
-void FleetManager::loadFleet() {}
+void FleetManager::saveFleet()
+{
+    clearScreen();
+    cout << "========================================\n";
+    cout << "              SAVE FLEET\n";
+    cout << "========================================\n";
+    cout << "Current save file: " << (saveFileName.empty() ? "-" : saveFileName) << "\n";
+    cout << "Enter save file name (without extension): ";
+
+    string input;
+    getline(cin, input);
+    if (input.empty()) {
+        cout << "Save cancelled.\n";
+        pause();
+        return;
+    }
+
+    string fileName = input + ".fleet";
+    ofstream out(fileName);
+    if (!out.is_open()) {
+        cout << "Failed to open file: " << fileName << "\n";
+        pause();
+        return;
+    }
+
+    out << nextId << "\n";
+    out << balance << "\n";
+    out << fleet.size() << "\n";
+
+    for (TacticalUnit* u : fleet) {
+        string type = u->getType();
+        out << type << "\n";
+        out << u->getId() << "\n";
+        out << u->getBattery() << "\n";
+        out << u->getMaxBattery() << "\n";
+
+        if (type == "CombatDrone") {
+            CombatDrone* cd = static_cast<CombatDrone*>(u);
+            out << cd->getDamage() << "\n";
+            out << cd->getAccuracy() << "\n";
+        }
+        else if (type == "ScoutDrone") {
+            ScoutDrone* sd = static_cast<ScoutDrone*>(u);
+            out << sd->getAffectedUnits() << "\n";
+            out << sd->getAccuracyMultiplier() << "\n";
+        }
+        else if (type == "ChargerDrone") {
+            ChargerDrone* chd = static_cast<ChargerDrone*>(u);
+            out << chd->getPowerBank() << "\n";
+        }
+    }
+
+    out.close();
+    saveFileName = fileName;
+    cout << "Fleet saved to \"" << fileName << "\".\n";
+    pause();
+}
+
+void FleetManager::loadFleet()
+{
+    clearScreen();
+    cout << "========================================\n";
+    cout << "              LOAD FLEET\n";
+    cout << "========================================\n";
+
+    cout << "Available save files:\n";
+    bool anyFound = false;
+    for (const auto& entry : fs::directory_iterator(".")) {
+        if (entry.path().extension() == ".fleet") {
+            cout << "  - " << entry.path().filename().string() << "\n";
+            anyFound = true;
+        }
+    }
+    if (!anyFound) {
+        cout << "  (none found)\n";
+        pause();
+        return;
+    }
+
+    cout << "Enter save file name (without extension): ";
+    string input;
+    getline(cin, input);
+    if (input.empty()) {
+        cout << "Load cancelled.\n";
+        pause();
+        return;
+    }
+
+    string fileName = input + ".fleet";
+    ifstream in(fileName);
+    if (!in.is_open()) {
+        cout << "Failed to open file: " << fileName << "\n";
+        pause();
+        return;
+    }
+
+    int loadedNextId, loadedBalance;
+    size_t fleetSize;
+
+    in >> loadedNextId >> loadedBalance >> fleetSize;
+    in.ignore();
+
+    vector<TacticalUnit*> loadedFleet;
+    bool parseError = false;
+
+    for (size_t i = 0; i < fleetSize && !in.eof(); ++i) {
+        string type;
+        int id, battery, maxBattery;
+
+        getline(in, type);
+        in >> id >> battery >> maxBattery;
+        in.ignore();
+
+        TacticalUnit* unit = nullptr;
+
+        if (type == "CombatDrone") {
+            int damage, accuracy;
+            in >> damage >> accuracy;
+            in.ignore();
+            CombatDrone* cd = new CombatDrone(id);
+            cd->setDamage(damage);
+            cd->setAccuracy(accuracy);
+            cd->setMaxBattery(maxBattery);
+            cd->setBattery(battery);
+            unit = cd;
+        }
+        else if (type == "ScoutDrone") {
+            int affectedUnits;
+            float accuracyMult;
+            in >> affectedUnits >> accuracyMult;
+            in.ignore();
+            ScoutDrone* sd = new ScoutDrone(id);
+            sd->setAffectedUnits(affectedUnits);
+            sd->setAccuracyMultiplier(accuracyMult);
+            sd->setMaxBattery(maxBattery);
+            sd->setBattery(battery);
+            unit = sd;
+        }
+        else if (type == "ChargerDrone") {
+            int powerBank;
+            in >> powerBank;
+            in.ignore();
+            ChargerDrone* chd = new ChargerDrone(id);
+            chd->setPowerBank(powerBank);
+            chd->setMaxBattery(maxBattery);
+            chd->setBattery(battery);
+            unit = chd;
+        }
+        else {
+            parseError = true;
+            break;
+        }
+
+        if (unit) loadedFleet.push_back(unit);
+    }
+
+    in.close();
+
+    if (parseError) {
+        cout << "Error: save file is corrupted.\n";
+        for (TacticalUnit* u : loadedFleet) delete u;
+        pause();
+        return;
+    }
+
+    for (TacticalUnit* u : fleet) delete u;
+    fleet.clear();
+
+    fleet = loadedFleet;
+    nextId = loadedNextId;
+    balance = loadedBalance;
+    saveFileName = fileName;
+
+    cout << "Fleet loaded from \"" << fileName << "\". "
+        << fleet.size() << " drone(s) restored.\n";
+    pause();
+}
 
 void FleetManager::pause()
 {
     cout << "\nPress ENTER to continue...";
-    cin.ignore(1000, '\n');
     cin.get();
 }
 

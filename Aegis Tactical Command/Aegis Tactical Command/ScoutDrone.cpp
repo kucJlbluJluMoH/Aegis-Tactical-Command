@@ -71,5 +71,15 @@ string ScoutDrone::serialize() const {
     return "ScoutDrone|" + to_string(id) + "|" + to_string(battery)
         + "|" + to_string(affectedUnits) + "|" + to_string(accuracyMultiplier);
 }
+void ScoutDrone::setAccuracyMultiplier(int val)
+{
+    accuracyMultiplier = val;
+}
+
+void ScoutDrone::setAffectedUnits(int val)
+{
+    affectedUnits = val;
+}
+
 int    ScoutDrone::getAffectedUnits()     const { return affectedUnits; }
 double ScoutDrone::getAccuracyMultiplier() const { return accuracyMultiplier; }

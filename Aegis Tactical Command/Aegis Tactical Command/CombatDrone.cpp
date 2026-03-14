@@ -38,6 +38,16 @@ void CombatDrone::performAction(BattleContext&) {
     setBattery(battery - 5);
 }
 
+void CombatDrone::setDamage(int dmg)
+{
+    damage = dmg;
+}
+
+void CombatDrone::setAccuracy(int acc)
+{
+    accuracy = acc;
+}
+
 int CombatDrone::getLastDamage() const { return lastDamage; }
 
 void CombatDrone::printStats(ostream& out) const {

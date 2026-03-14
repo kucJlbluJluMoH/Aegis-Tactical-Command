@@ -66,4 +66,10 @@ string ChargerDrone::serialize() const {
     return "ChargerDrone|" + to_string(id) + "|"
         + to_string(battery) + "|" + to_string(powerBank);
 }
+
+void ChargerDrone::setPowerBank(int val)
+{
+    powerBank = val;
+}
+
 int ChargerDrone::getPowerBank() const { return powerBank; }

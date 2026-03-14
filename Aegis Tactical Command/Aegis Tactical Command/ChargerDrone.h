@@ -16,5 +16,6 @@ public:
     string getType() const override;
     string serialize() const override;
 
+    void setPowerBank(int val);
     int getPowerBank() const;
 };

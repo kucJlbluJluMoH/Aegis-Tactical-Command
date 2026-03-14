@@ -18,6 +18,9 @@ public:
 
     void addAccuracyBonus(double bonus);
     void resetAccuracyBonus();
+    void setDamage(int damage);
+    void setAccuracy(int acc);
+
 
     int getLastDamage() const;
 
