@@ -1,7 +1,13 @@
 #include "CombatDrone.h"
 #include <algorithm>
 #include <iostream>
+#include <random>
 using namespace std;
+
+static mt19937& rng() {
+    static mt19937 engine(random_device{}());
+    return engine;
+}
 
 CombatDrone::CombatDrone(int id, int battery, int damage, int accuracy)
     : TacticalUnit(id, "Ares", battery),
@@ -22,9 +28,11 @@ void CombatDrone::performAction(BattleContext&) {
         << " | Accuracy: " << accuracy
         << " | Acc.Mult: x" << static_cast<int>(pendingAccMult * 100) / 100.0 << "\n";
 
+    uniform_int_distribution<int> d100(0, 99);
     int effectiveAcc = static_cast<int>(accuracy * pendingAccMult);
-    bool hit = (rand() % 100) < effectiveAcc;
-    bool crit = hit && (rand() % 100) < 30;
+    bool hit = d100(rng()) < effectiveAcc;
+    bool crit = hit && d100(rng()) < 30;
+
     cout << "[ACTION] " << name << " (ID: " << id << ") fires!";
     if (hit) {
         lastDamage = crit ? static_cast<int>(damage * 1.5) : damage;
@@ -48,7 +56,7 @@ void CombatDrone::setAccuracy(int acc)
     accuracy = acc;
 }
 
-int CombatDrone::getLastDamage() const { return lastDamage; }
+int CombatDrone::getLastDamage() const noexcept { return lastDamage; }
 
 void CombatDrone::printStats(ostream& out) const {
     out << "[ID: " << id << "] CombatDrone \"" << name
@@ -56,7 +64,7 @@ void CombatDrone::printStats(ostream& out) const {
         << " | Accuracy: " << accuracy;
 }
 
-TacticalUnit& CombatDrone::operator+(const UpgradeModule& mod) {
+TacticalUnit& CombatDrone::operator+=(const UpgradeModule& mod) {
     switch (mod.getType()) {
     case UpgradeType::DAMAGE:
         damage += 10;
@@ -74,10 +82,10 @@ TacticalUnit& CombatDrone::operator+(const UpgradeModule& mod) {
     return *this;
 }
 
-string CombatDrone::getType()  const { return "CombatDrone"; }
+string CombatDrone::getType() const noexcept { return "CombatDrone"; }
 string CombatDrone::serialize() const {
     return "CombatDrone|" + to_string(id) + "|" + to_string(battery)
         + "|" + to_string(damage) + "|" + to_string(accuracy);
 }
-int CombatDrone::getDamage()   const { return damage; }
-int CombatDrone::getAccuracy() const { return accuracy; }
+int CombatDrone::getDamage() const noexcept { return damage; }
+int CombatDrone::getAccuracy() const noexcept { return accuracy; }

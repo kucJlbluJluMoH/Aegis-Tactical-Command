@@ -10,10 +10,10 @@ TacticalUnit::~TacticalUnit()
 {
 }
 
-int TacticalUnit::getId() const { return id; }
-string TacticalUnit::getName() const { return name; }
-int TacticalUnit::getBattery() const { return battery; }
-int TacticalUnit::getMaxBattery() const { return maxBattery; }
+int TacticalUnit::getId() const noexcept { return id; }
+string TacticalUnit::getName() const noexcept { return name; }
+int TacticalUnit::getBattery() const noexcept { return battery; }
+int TacticalUnit::getMaxBattery() const noexcept { return maxBattery; }
 
 void TacticalUnit::setBattery(int b) {
     battery = min(b, maxBattery);

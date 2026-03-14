@@ -2,7 +2,13 @@
 #include <algorithm>
 #include <climits>
 #include <iostream>
+#include <random>
 using namespace std;
+
+static mt19937& rng() {
+    static mt19937 engine(random_device{}());
+    return engine;
+}
 
 ChargerDrone::ChargerDrone(int id, int battery, int powerBank)
     : TacticalUnit(id, "Helper", battery), powerBank(powerBank) {
@@ -27,8 +33,8 @@ void ChargerDrone::performAction(BattleContext& ctx) {
     }
 
     if (target) {
-        int transfer = rand() % 31; // 0-30
-        transfer = min(transfer, powerBank);
+        uniform_int_distribution<int> dist(0, 30);
+        int transfer = min(dist(rng()), powerBank);
         if (transfer > 0) {
             target->setBattery(target->getBattery() + transfer);
             cout << "  -> Transfers " << transfer << " energy to "
@@ -46,7 +52,7 @@ void ChargerDrone::printStats(ostream& out) const {
         << "% | Power bank - " << powerBank << "%";
 }
 
-TacticalUnit& ChargerDrone::operator+(const UpgradeModule& mod) {
+TacticalUnit& ChargerDrone::operator+=(const UpgradeModule& mod) {
     switch (mod.getType()) {
     case UpgradeType::POWER_BANK:
         powerBank += 20;
@@ -61,7 +67,7 @@ TacticalUnit& ChargerDrone::operator+(const UpgradeModule& mod) {
     return *this;
 }
 
-string ChargerDrone::getType()   const { return "ChargerDrone"; }
+string ChargerDrone::getType() const noexcept { return "ChargerDrone"; }
 string ChargerDrone::serialize() const {
     return "ChargerDrone|" + to_string(id) + "|"
         + to_string(battery) + "|" + to_string(powerBank);
@@ -72,4 +78,4 @@ void ChargerDrone::setPowerBank(int val)
     powerBank = val;
 }
 
-int ChargerDrone::getPowerBank() const { return powerBank; }
+int ChargerDrone::getPowerBank() const noexcept { return powerBank; }

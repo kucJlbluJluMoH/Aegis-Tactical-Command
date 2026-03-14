@@ -2,7 +2,13 @@
 #include "CombatDrone.h"
 #include <algorithm>
 #include <iostream>
+#include <random>
 using namespace std;
+
+static mt19937& rng() {
+    static mt19937 engine(random_device{}());
+    return engine;
+}
 
 ScoutDrone::ScoutDrone(int id, int battery, int affectedUnits, double accuracyMult)
     : TacticalUnit(id, "Seeker", battery),
@@ -28,8 +34,10 @@ void ScoutDrone::performAction(BattleContext& ctx) {
         }
     }
 
-    for (int i = (int)combatants.size() - 1; i > 0; --i)
-        swap(combatants[i], combatants[rand() % (i + 1)]);
+    for (int i = (int)combatants.size() - 1; i > 0; --i) {
+        uniform_int_distribution<int> dist(0, i);
+        swap(combatants[i], combatants[dist(rng())]);
+    }
 
     int count = min(affectedUnits, (int)combatants.size());
     for (int i = 0; i < count; ++i) {
@@ -48,7 +56,7 @@ void ScoutDrone::printStats(ostream& out) const {
         << " | Accuracy multiplier: " << accuracyMultiplier;
 }
 
-TacticalUnit& ScoutDrone::operator+(const UpgradeModule& mod) {
+TacticalUnit& ScoutDrone::operator+=(const UpgradeModule& mod) {
     switch (mod.getType()) {
     case UpgradeType::AFFECTED_UNITS:
         affectedUnits += 1;
@@ -66,12 +74,13 @@ TacticalUnit& ScoutDrone::operator+(const UpgradeModule& mod) {
     return *this;
 }
 
-string ScoutDrone::getType()   const { return "ScoutDrone"; }
+string ScoutDrone::getType() const noexcept { return "ScoutDrone"; }
 string ScoutDrone::serialize() const {
     return "ScoutDrone|" + to_string(id) + "|" + to_string(battery)
         + "|" + to_string(affectedUnits) + "|" + to_string(accuracyMultiplier);
 }
-void ScoutDrone::setAccuracyMultiplier(int val)
+
+void ScoutDrone::setAccuracyMultiplier(double val)
 {
     accuracyMultiplier = val;
 }
@@ -81,5 +90,5 @@ void ScoutDrone::setAffectedUnits(int val)
     affectedUnits = val;
 }
 
-int    ScoutDrone::getAffectedUnits()     const { return affectedUnits; }
-double ScoutDrone::getAccuracyMultiplier() const { return accuracyMultiplier; }
+int ScoutDrone::getAffectedUnits() const noexcept { return affectedUnits; }
+double ScoutDrone::getAccuracyMultiplier() const noexcept { return accuracyMultiplier; }

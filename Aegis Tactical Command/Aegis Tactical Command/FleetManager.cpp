@@ -4,12 +4,12 @@
 #include <climits>
 #include <fstream>
 #include <filesystem>
+#include <random>
 using namespace std;
 namespace fs = filesystem;
 
 FleetManager::FleetManager() : nextId(100), balance(500), saveFileName("")
 {
-    srand(static_cast<unsigned>(time(nullptr)));
 }
 
 FleetManager::~FleetManager()
@@ -173,8 +173,8 @@ void FleetManager::deployMission()
             BattleContext ctx;
             u->performAction(ctx);
 
-            CombatDrone* cd = static_cast<CombatDrone*>(u);
-            bossHp = max(0, bossHp - cd->getLastDamage());
+            CombatDrone* cd = dynamic_cast<CombatDrone*>(u);
+            if (cd) bossHp = max(0, bossHp - cd->getLastDamage());
 
             if (bossHp == 0) break;
         }
@@ -276,85 +276,86 @@ void FleetManager::upgradeCenter()
     try { targetId = stoi(line); }
     catch (...) { return; }
 
-    auto it = find_if(fleet.begin(), fleet.end(),
-        [targetId](TacticalUnit* u) { return u->getId() == targetId; });
-
-    if (it == fleet.end()) {
-        cout << "No drone found with ID " << targetId << ".\n";
-        pause();
-        return;
-    }
-
-    TacticalUnit* drone = *it;
-    cout << "Selected drone: " << *drone << "\n";
-    cout << "Your balance is: " << balance << "\n";
-    cout << "Select an upgrade you want to install:\n";
-
-    vector<UpgradeModule> options;
-    const string type = drone->getType();
-
-    if (type == "CombatDrone") {
-        CombatDrone* cd = dynamic_cast<CombatDrone*>(drone);
-        options.push_back(UpgradeModule(
-            "Damage Upgrade: " + to_string(cd->getDamage()) + " -> " + to_string(cd->getDamage() + 10),
-            UpgradeType::DAMAGE, 30));
-        options.push_back(UpgradeModule(
-            "Accuracy Upgrade: " + to_string(cd->getAccuracy()) + " -> " + to_string(cd->getAccuracy() + 10),
-            UpgradeType::ACCURACY, 30));
-        options.push_back(UpgradeModule(
-            "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
-            UpgradeType::BATTERY, 25));
-
-    }
-    else if (type == "ScoutDrone") {
-        ScoutDrone* sd = dynamic_cast<ScoutDrone*>(drone);
-        options.push_back(UpgradeModule(
-            "Affected units: " + to_string(sd->getAffectedUnits()) + " -> " + to_string(sd->getAffectedUnits() + 1),
-            UpgradeType::AFFECTED_UNITS, 25));
-        options.push_back(UpgradeModule(
-            "Accuracy multiplier: " + to_string(sd->getAccuracyMultiplier()).substr(0, 3)
-            + " -> " + to_string(sd->getAccuracyMultiplier() + 0.1).substr(0, 3),
-            UpgradeType::ACCURACY_MULT, 25));
-        options.push_back(UpgradeModule(
-            "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
-            UpgradeType::BATTERY, 25));
-
-    }
-    else if (type == "ChargerDrone") {
-        ChargerDrone* chd = dynamic_cast<ChargerDrone*>(drone);
-        options.push_back(UpgradeModule(
-            "Power bank Upgrade: " + to_string(chd->getPowerBank()) + " -> " + to_string(chd->getPowerBank() + 20),
-            UpgradeType::POWER_BANK, 30));
-        options.push_back(UpgradeModule(
-            "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
-            UpgradeType::BATTERY, 25));
-    }
-
-    for (int i = 0; i < (int)options.size(); i++) {
-        cout << (i + 1) << ". " << options[i].getLabel()
-            << "  (" << options[i].getCost() << " coins)\n";
-    }
-    cout << (options.size() + 1) << ". Cancel\n<< ";
-
-    string sel;
-    getline(cin, sel);
-    int selIdx = 0;
-    try { selIdx = stoi(sel) - 1; }
-    catch (...) { pause(); return; }
-
-    if (selIdx < 0 || selIdx >= (int)options.size()) { pause(); return; }
-
-    UpgradeModule& chosen = options[selIdx];
     try {
-        if (balance < chosen.getCost())
-            throw InsufficientFundsException(balance, chosen.getCost());
-        *drone + chosen;
-        balance -= chosen.getCost();
-        cout << "Upgrade applied! New stats: " << *drone << "\n";
+        auto it = find_if(fleet.begin(), fleet.end(),
+            [targetId](TacticalUnit* u) { return u->getId() == targetId; });
+
+        if (it == fleet.end())
+            throw InvalidDroneIdException(targetId);
+
+        TacticalUnit* drone = *it;
+        cout << "Selected drone: " << *drone << "\n";
+        cout << "Your balance is: " << balance << "\n";
+        cout << "Select an upgrade you want to install:\n";
+
+        vector<UpgradeModule> options;
+        const string type = drone->getType();
+
+        if (type == "CombatDrone") {
+            CombatDrone* cd = dynamic_cast<CombatDrone*>(drone);
+            options.push_back(UpgradeModule(
+                "Damage Upgrade: " + to_string(cd->getDamage()) + " -> " + to_string(cd->getDamage() + 10),
+                UpgradeType::DAMAGE, 30));
+            options.push_back(UpgradeModule(
+                "Accuracy Upgrade: " + to_string(cd->getAccuracy()) + " -> " + to_string(cd->getAccuracy() + 10),
+                UpgradeType::ACCURACY, 30));
+            options.push_back(UpgradeModule(
+                "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
+                UpgradeType::BATTERY, 25));
+        }
+        else if (type == "ScoutDrone") {
+            ScoutDrone* sd = dynamic_cast<ScoutDrone*>(drone);
+            options.push_back(UpgradeModule(
+                "Affected units: " + to_string(sd->getAffectedUnits()) + " -> " + to_string(sd->getAffectedUnits() + 1),
+                UpgradeType::AFFECTED_UNITS, 25));
+            options.push_back(UpgradeModule(
+                "Accuracy multiplier: " + to_string(sd->getAccuracyMultiplier()).substr(0, 3)
+                + " -> " + to_string(sd->getAccuracyMultiplier() + 0.1).substr(0, 3),
+                UpgradeType::ACCURACY_MULT, 25));
+            options.push_back(UpgradeModule(
+                "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
+                UpgradeType::BATTERY, 25));
+        }
+        else if (type == "ChargerDrone") {
+            ChargerDrone* chd = dynamic_cast<ChargerDrone*>(drone);
+            options.push_back(UpgradeModule(
+                "Power bank Upgrade: " + to_string(chd->getPowerBank()) + " -> " + to_string(chd->getPowerBank() + 20),
+                UpgradeType::POWER_BANK, 30));
+            options.push_back(UpgradeModule(
+                "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
+                UpgradeType::BATTERY, 25));
+        }
+
+        for (int i = 0; i < (int)options.size(); i++) {
+            cout << (i + 1) << ". " << options[i].getLabel()
+                << "  (" << options[i].getCost() << " coins)\n";
+        }
+        cout << (options.size() + 1) << ". Cancel\n<< ";
+
+        string sel;
+        getline(cin, sel);
+        int selIdx = 0;
+        try { selIdx = stoi(sel) - 1; }
+        catch (...) { pause(); return; }
+
+        if (selIdx < 0 || selIdx >= (int)options.size()) { pause(); return; }
+
+        UpgradeModule& chosen = options[selIdx];
+        try {
+            if (balance < chosen.getCost())
+                throw InsufficientFundsException(balance, chosen.getCost());
+            *drone += chosen;
+            balance -= chosen.getCost();
+            cout << "Upgrade applied! New stats: " << *drone << "\n";
+        }
+        catch (const InsufficientFundsException& e) {
+            cout << e.what() << "\n";
+        }
     }
-    catch (const InsufficientFundsException& e) {
+    catch (const InvalidDroneIdException& e) {
         cout << e.what() << "\n";
     }
+
     pause();
 }
 
@@ -376,43 +377,49 @@ void FleetManager::saveFleet()
     }
 
     string fileName = input + ".fleet";
-    ofstream out(fileName);
-    if (!out.is_open()) {
-        cout << "Failed to open file: " << fileName << "\n";
-        pause();
-        return;
+
+    try {
+        ofstream out(fileName);
+        if (!out.is_open())
+            throw FileIOException("Cannot open file for writing: " + fileName);
+
+        out << nextId << "\n";
+        out << balance << "\n";
+        out << fleet.size() << "\n";
+
+        for (TacticalUnit* u : fleet) {
+            string type = u->getType();
+            out << type << "\n";
+            out << u->getId() << "\n";
+            out << u->getBattery() << "\n";
+            out << u->getMaxBattery() << "\n";
+
+            if (type == "CombatDrone") {
+                CombatDrone* cd = static_cast<CombatDrone*>(u);
+                out << cd->getDamage() << "\n";
+                out << cd->getAccuracy() << "\n";
+            }
+            else if (type == "ScoutDrone") {
+                ScoutDrone* sd = static_cast<ScoutDrone*>(u);
+                out << sd->getAffectedUnits() << "\n";
+                out << sd->getAccuracyMultiplier() << "\n";
+            }
+            else if (type == "ChargerDrone") {
+                ChargerDrone* chd = static_cast<ChargerDrone*>(u);
+                out << chd->getPowerBank() << "\n";
+            }
+            // serialize() used as a human-readable record per drone
+            out << "# " << u->serialize() << "\n";
+        }
+
+        out.close();
+        saveFileName = fileName;
+        cout << "Fleet saved to \"" << fileName << "\".\n";
+    }
+    catch (const FileIOException& e) {
+        cout << e.what() << "\n";
     }
 
-    out << nextId << "\n";
-    out << balance << "\n";
-    out << fleet.size() << "\n";
-
-    for (TacticalUnit* u : fleet) {
-        string type = u->getType();
-        out << type << "\n";
-        out << u->getId() << "\n";
-        out << u->getBattery() << "\n";
-        out << u->getMaxBattery() << "\n";
-
-        if (type == "CombatDrone") {
-            CombatDrone* cd = static_cast<CombatDrone*>(u);
-            out << cd->getDamage() << "\n";
-            out << cd->getAccuracy() << "\n";
-        }
-        else if (type == "ScoutDrone") {
-            ScoutDrone* sd = static_cast<ScoutDrone*>(u);
-            out << sd->getAffectedUnits() << "\n";
-            out << sd->getAccuracyMultiplier() << "\n";
-        }
-        else if (type == "ChargerDrone") {
-            ChargerDrone* chd = static_cast<ChargerDrone*>(u);
-            out << chd->getPowerBank() << "\n";
-        }
-    }
-
-    out.close();
-    saveFileName = fileName;
-    cout << "Fleet saved to \"" << fileName << "\".\n";
     pause();
 }
 
@@ -447,92 +454,97 @@ void FleetManager::loadFleet()
     }
 
     string fileName = input + ".fleet";
-    ifstream in(fileName);
-    if (!in.is_open()) {
-        cout << "Failed to open file: " << fileName << "\n";
-        pause();
-        return;
-    }
 
-    int loadedNextId, loadedBalance;
-    size_t fleetSize;
+    try {
+        ifstream in(fileName);
+        if (!in.is_open())
+            throw FileIOException("Cannot open file for reading: " + fileName);
 
-    in >> loadedNextId >> loadedBalance >> fleetSize;
-    in.ignore();
+        int loadedNextId, loadedBalance;
+        size_t fleetSize;
 
-    vector<TacticalUnit*> loadedFleet;
-    bool parseError = false;
-
-    for (size_t i = 0; i < fleetSize && !in.eof(); ++i) {
-        string type;
-        int id, battery, maxBattery;
-
-        getline(in, type);
-        in >> id >> battery >> maxBattery;
+        in >> loadedNextId >> loadedBalance >> fleetSize;
         in.ignore();
 
-        TacticalUnit* unit = nullptr;
+        vector<TacticalUnit*> loadedFleet;
+        bool parseError = false;
 
-        if (type == "CombatDrone") {
-            int damage, accuracy;
-            in >> damage >> accuracy;
+        for (size_t i = 0; i < fleetSize && !in.eof(); ++i) {
+            string type;
+            int id, battery, maxBattery;
+
+            getline(in, type);
+            in >> id >> battery >> maxBattery;
             in.ignore();
-            CombatDrone* cd = new CombatDrone(id);
-            cd->setDamage(damage);
-            cd->setAccuracy(accuracy);
-            cd->setMaxBattery(maxBattery);
-            cd->setBattery(battery);
-            unit = cd;
-        }
-        else if (type == "ScoutDrone") {
-            int affectedUnits;
-            float accuracyMult;
-            in >> affectedUnits >> accuracyMult;
-            in.ignore();
-            ScoutDrone* sd = new ScoutDrone(id);
-            sd->setAffectedUnits(affectedUnits);
-            sd->setAccuracyMultiplier(accuracyMult);
-            sd->setMaxBattery(maxBattery);
-            sd->setBattery(battery);
-            unit = sd;
-        }
-        else if (type == "ChargerDrone") {
-            int powerBank;
-            in >> powerBank;
-            in.ignore();
-            ChargerDrone* chd = new ChargerDrone(id);
-            chd->setPowerBank(powerBank);
-            chd->setMaxBattery(maxBattery);
-            chd->setBattery(battery);
-            unit = chd;
-        }
-        else {
-            parseError = true;
-            break;
+
+            TacticalUnit* unit = nullptr;
+
+            if (type == "CombatDrone") {
+                int damage, accuracy;
+                in >> damage >> accuracy;
+                in.ignore();
+                in.ignore(1024, '\n'); // skip "# ..." serialize line
+                CombatDrone* cd = new CombatDrone(id);
+                cd->setDamage(damage);
+                cd->setAccuracy(accuracy);
+                cd->setMaxBattery(maxBattery);
+                cd->setBattery(battery);
+                unit = cd;
+            }
+            else if (type == "ScoutDrone") {
+                int affectedUnits;
+                double accuracyMult;
+                in >> affectedUnits >> accuracyMult;
+                in.ignore();
+                in.ignore(1024, '\n');
+                ScoutDrone* sd = new ScoutDrone(id);
+                sd->setAffectedUnits(affectedUnits);
+                sd->setAccuracyMultiplier(accuracyMult);
+                sd->setMaxBattery(maxBattery);
+                sd->setBattery(battery);
+                unit = sd;
+            }
+            else if (type == "ChargerDrone") {
+                int powerBank;
+                in >> powerBank;
+                in.ignore();
+                in.ignore(1024, '\n');
+                ChargerDrone* chd = new ChargerDrone(id);
+                chd->setPowerBank(powerBank);
+                chd->setMaxBattery(maxBattery);
+                chd->setBattery(battery);
+                unit = chd;
+            }
+            else {
+                parseError = true;
+                break;
+            }
+
+            if (unit) loadedFleet.push_back(unit);
         }
 
-        if (unit) loadedFleet.push_back(unit);
+        in.close();
+
+        if (parseError) {
+            for (TacticalUnit* u : loadedFleet) delete u;
+            throw FileIOException("Save file is corrupted: " + fileName);
+        }
+
+        for (TacticalUnit* u : fleet) delete u;
+        fleet.clear();
+
+        fleet = loadedFleet;
+        nextId = loadedNextId;
+        balance = loadedBalance;
+        saveFileName = fileName;
+
+        cout << "Fleet loaded from \"" << fileName << "\". "
+            << fleet.size() << " drone(s) restored.\n";
+    }
+    catch (const FileIOException& e) {
+        cout << e.what() << "\n";
     }
 
-    in.close();
-
-    if (parseError) {
-        cout << "Error: save file is corrupted.\n";
-        for (TacticalUnit* u : loadedFleet) delete u;
-        pause();
-        return;
-    }
-
-    for (TacticalUnit* u : fleet) delete u;
-    fleet.clear();
-
-    fleet = loadedFleet;
-    nextId = loadedNextId;
-    balance = loadedBalance;
-    saveFileName = fileName;
-
-    cout << "Fleet loaded from \"" << fileName << "\". "
-        << fleet.size() << " drone(s) restored.\n";
     pause();
 }
 
@@ -562,7 +574,6 @@ void FleetManager::run()
             [](TacticalUnit* a, TacticalUnit* b) {
                 return a->getId() < b->getId();
             });
-
 
         cout << "========================================\n";
         cout << "       AEGIS TACTICAL COMMAND\n";

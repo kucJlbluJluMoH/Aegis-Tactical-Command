@@ -7,16 +7,15 @@
 #include "ScoutDrone.h"
 #include "ChargerDrone.h"
 #include "Exceptions.h"
-using namespace std;
 
 class FleetManager
 {
 private:
-    vector<TacticalUnit*> fleet;
+    std::vector<TacticalUnit*> fleet;
 
     int nextId;
     int balance;
-    string saveFileName;
+    std::string saveFileName;
 
     void pause();
     void clearScreen();

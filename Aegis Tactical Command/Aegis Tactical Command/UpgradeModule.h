@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-using namespace std;
 
 enum class UpgradeType {
     DAMAGE,
@@ -13,14 +12,14 @@ enum class UpgradeType {
 
 class UpgradeModule {
 private:
-    string label;
+    std::string label;
     UpgradeType type;
     int cost;
 
 public:
-    UpgradeModule(const string& label, UpgradeType type, int cost);
+    UpgradeModule(const std::string& label, UpgradeType type, int cost);
 
-    string getLabel() const;
-    UpgradeType getType() const;
-    int getCost() const;
+    std::string getLabel() const noexcept;
+    UpgradeType getType() const noexcept;
+    int getCost() const noexcept;
 };
