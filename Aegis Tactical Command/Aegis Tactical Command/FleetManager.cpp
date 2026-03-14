@@ -3,17 +3,9 @@
 #include <iostream>
 using namespace std;
 
-FleetManager::FleetManager() : balance(100), nextId(101), saveFileName("") 
+FleetManager::FleetManager() : balance(1000), nextId(100), saveFileName("") 
 {
     srand(static_cast<unsigned>(time(nullptr)));
-    fleet.push_back(new CombatDrone(101, 100, 30, 70));
-    fleet.push_back(new CombatDrone(102, 85, 30, 70));
-    fleet.push_back(new CombatDrone(103, 70, 30, 70));
-    fleet.push_back(new CombatDrone(104, 13, 40, 70));
-    fleet.push_back(new CombatDrone(105, 50, 50, 70));
-    fleet.push_back(new ScoutDrone(106, 90, 3, 1.1));
-    fleet.push_back(new ChargerDrone(107, 70, 100));
-    nextId = 108;
 }
 
 FleetManager::~FleetManager() 
@@ -88,7 +80,103 @@ void FleetManager::addUnit()
 void FleetManager::deployMission()
 {
 }
-void FleetManager::upgradeCenter() {}
+
+void FleetManager::upgradeCenter() 
+{
+    clearScreen();
+    cout << "Enter the ID of a drone you'd like to upgrade:\n";
+    cout << "1. Cancel\n<< ";
+
+    string line;
+    getline(cin, line);
+    if (line == "1" || line.empty()) return;
+
+    int targetId = 0;
+    try { targetId = stoi(line); }
+    catch (...) { return; }
+
+    auto it = find_if(fleet.begin(), fleet.end(),
+        [targetId](TacticalUnit* u) { return u->getId() == targetId; });
+
+    if (it == fleet.end()) {
+        cout << "No drone found with ID " << targetId << ".\n";
+        pause();
+        return;
+    }
+
+    TacticalUnit* drone = *it;
+    cout << "Selected drone: " << *drone << "\n";
+    cout << "Your balance is: " << balance << "\n";
+    cout << "Select an upgrade you want to install:\n";
+
+    vector<UpgradeModule> options;
+    const string type = drone->getType();
+
+    if (type == "CombatDrone") {
+        CombatDrone* cd = dynamic_cast<CombatDrone*>(drone);
+        options.push_back(UpgradeModule(
+            "Damage Upgrade: " + to_string(cd->getDamage()) + " -> " + to_string(cd->getDamage() + 10),
+            UpgradeType::DAMAGE, 30));
+        options.push_back(UpgradeModule(
+            "Accuracy Upgrade: " + to_string(cd->getAccuracy()) + " -> " + to_string(cd->getAccuracy() + 10),
+            UpgradeType::ACCURACY, 30));
+        options.push_back(UpgradeModule(
+            "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
+            UpgradeType::BATTERY, 25));
+
+    }
+    else if (type == "ScoutDrone") {
+        ScoutDrone* sd = dynamic_cast<ScoutDrone*>(drone);
+        options.push_back(UpgradeModule(
+            "Affected units: " + to_string(sd->getAffectedUnits()) + " -> " + to_string(sd->getAffectedUnits() + 1),
+            UpgradeType::AFFECTED_UNITS, 25));
+        options.push_back(UpgradeModule(
+            "Accuracy multiplier: " + to_string(sd->getAccuracyMultiplier()).substr(0, 3)
+            + " -> " + to_string(sd->getAccuracyMultiplier() + 0.1).substr(0, 3),
+            UpgradeType::ACCURACY_MULT, 25));
+        options.push_back(UpgradeModule(
+            "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
+            UpgradeType::BATTERY, 25));
+
+    }
+    else if (type == "ChargerDrone") {
+        ChargerDrone* chd = dynamic_cast<ChargerDrone*>(drone);
+        options.push_back(UpgradeModule(
+            "Power bank Upgrade: " + to_string(chd->getPowerBank()) + " -> " + to_string(chd->getPowerBank() + 20),
+            UpgradeType::POWER_BANK, 30));
+        options.push_back(UpgradeModule(
+            "Battery Upgrade: " + to_string(drone->getMaxBattery()) + " -> " + to_string(drone->getMaxBattery() + 20),
+            UpgradeType::BATTERY, 25));
+    }
+
+    for (int i = 0; i < (int)options.size(); i++) {
+        cout << (i + 1) << ". " << options[i].getLabel()
+            << "  (" << options[i].getCost() << " coins)\n";
+    }
+    cout << (options.size() + 1) << ". Cancel\n<< ";
+
+    string sel;
+    getline(cin, sel);
+    int selIdx = 0;
+    try { selIdx = stoi(sel) - 1; }
+    catch (...) { pause(); return; }
+
+    if (selIdx < 0 || selIdx >= (int)options.size()) { pause(); return; }
+
+    UpgradeModule& chosen = options[selIdx];
+    try {
+        if (balance < chosen.getCost())
+            throw InsufficientFundsException(balance, chosen.getCost());
+        *drone + chosen;
+        balance -= chosen.getCost();
+        cout << "Upgrade applied! New stats: " << *drone << "\n";
+    }
+    catch (const InsufficientFundsException& e) {
+        cout << e.what() << "\n";
+    }
+    pause();
+}
+
 void FleetManager::saveFleet() {}
 void FleetManager::loadFleet() {}
 
@@ -114,6 +202,13 @@ void FleetManager::run()
     while (running) 
     {
         clearScreen();
+
+        sort(fleet.begin(), fleet.end(),
+            [](TacticalUnit* a, TacticalUnit* b) {
+                return a->getId() < b->getId();
+            });
+
+
         cout << "========================================\n";
         cout << "       AEGIS TACTICAL COMMAND\n";
         cout << "========================================\n";

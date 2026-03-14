@@ -7,7 +7,7 @@ private:
     int powerBank;
 
 public:
-    ChargerDrone(int id, int battery = 70, int powerBank = 100);
+    ChargerDrone(int id, int battery = 100, int powerBank = 100);
 
     void performAction(double accuracyMult) override;
     void printStats(ostream& out) const override;
