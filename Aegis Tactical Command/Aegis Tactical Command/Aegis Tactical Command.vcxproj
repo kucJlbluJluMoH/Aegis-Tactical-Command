@@ -128,11 +128,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Aegis Tactical Command.cpp" />
+    <ClCompile Include="ChargerDrone.cpp" />
+    <ClCompile Include="CombatDrone.cpp" />
     <ClCompile Include="FleetManager.cpp" />
+    <ClCompile Include="ScoutDrone.cpp" />
+    <ClCompile Include="TacticalUnit.cpp" />
+    <ClCompile Include="UpgradeModule.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ChargerDrone.h" />
+    <ClInclude Include="CombatDrone.h" />
+    <ClInclude Include="Exceptions.h" />
     <ClInclude Include="FleetManager.h" />
+    <ClInclude Include="ScoutDrone.h" />
     <ClInclude Include="TacticalUnit.h" />
+    <ClInclude Include="UpgradeModule.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

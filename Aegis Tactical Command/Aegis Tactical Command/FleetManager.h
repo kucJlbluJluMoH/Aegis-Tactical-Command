@@ -2,6 +2,11 @@
 #include <vector>
 #include <string>
 #include "TacticalUnit.h"
+#include "UpgradeModule.h"
+#include "CombatDrone.h"
+#include "ScoutDrone.h"
+#include "ChargerDrone.h"
+#include "Exceptions.h"
 using namespace std;
 
 class FleetManager
