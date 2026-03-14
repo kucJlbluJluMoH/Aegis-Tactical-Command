@@ -128,6 +128,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Aegis Tactical Command.cpp" />
+    <ClCompile Include="FleetManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FleetManager.h" />
+    <ClInclude Include="TacticalUnit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

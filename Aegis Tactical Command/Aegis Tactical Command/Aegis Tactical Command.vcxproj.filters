@@ -18,5 +18,16 @@
     <ClCompile Include="Aegis Tactical Command.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FleetManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FleetManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TacticalUnit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
