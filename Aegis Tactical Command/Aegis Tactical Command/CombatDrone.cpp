@@ -23,10 +23,8 @@ void CombatDrone::resetAccuracyBonus() {
 }
 
 void CombatDrone::performAction(BattleContext&) {
-    cout << "  >> CombatDrone [ID: " << id << "] \"" << name
-        << "\" | Battery: " << battery << "% | Damage: " << damage
-        << " | Accuracy: " << accuracy
-        << " | Acc.Mult: x" << static_cast<int>(pendingAccMult * 100) / 100.0 << "\n";
+    cout << "  >> "; printStats(cout);
+    cout << " | Acc.Mult: x" << static_cast<int>(pendingAccMult * 100) / 100.0 << "\n";
 
     uniform_int_distribution<int> d100(0, 99);
     int effectiveAcc = static_cast<int>(accuracy * pendingAccMult);

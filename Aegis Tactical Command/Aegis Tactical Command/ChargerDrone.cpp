@@ -15,8 +15,7 @@ ChargerDrone::ChargerDrone(int id, int battery, int powerBank)
 }
 
 void ChargerDrone::performAction(BattleContext& ctx) {
-    cout << "  >> ChargerDrone [ID: " << id << "] \"" << name
-        << "\" | Battery: " << battery << "% | Power bank: " << powerBank << "%\n";
+    cout << "  >> "; printStats(cout); cout << "\n";
 
     cout << "[SUPPORT] " << name << " (ID: " << id << ") charges an ally.\n";
 

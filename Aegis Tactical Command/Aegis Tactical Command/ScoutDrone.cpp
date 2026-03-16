@@ -16,9 +16,7 @@ ScoutDrone::ScoutDrone(int id, int battery, int affectedUnits, double accuracyMu
 }
 
 void ScoutDrone::performAction(BattleContext& ctx) {
-    cout << "  >> ScoutDrone [ID: " << id << "] \"" << name
-        << "\" | Battery: " << battery << "% | Affected units: " << affectedUnits
-        << " | Acc.Mult: +" << static_cast<int>((accuracyMultiplier - 1.0) * 100) << "%\n";
+    cout << "  >> "; printStats(cout); cout << "\n";
 
     cout << "[SUPPORT] " << name << " (ID: " << id
         << ") scans the enemy! Accuracy bonus +"

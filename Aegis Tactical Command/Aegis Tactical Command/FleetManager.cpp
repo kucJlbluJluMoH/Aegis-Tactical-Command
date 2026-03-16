@@ -408,7 +408,6 @@ void FleetManager::saveFleet()
                 ChargerDrone* chd = static_cast<ChargerDrone*>(u);
                 out << chd->getPowerBank() << "\n";
             }
-            // serialize() used as a human-readable record per drone
             out << "# " << u->serialize() << "\n";
         }
 
@@ -483,7 +482,7 @@ void FleetManager::loadFleet()
                 int damage, accuracy;
                 in >> damage >> accuracy;
                 in.ignore();
-                in.ignore(1024, '\n'); // skip "# ..." serialize line
+                in.ignore(1024, '\n');
                 CombatDrone* cd = new CombatDrone(id);
                 cd->setDamage(damage);
                 cd->setAccuracy(accuracy);
